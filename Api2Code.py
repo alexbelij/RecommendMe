@@ -77,9 +77,9 @@ def GenreCounterUpdater(userSelectedMovies):
 
 
 
-#
-#
-#
+#Normalizes the user's ratings
+#Takes user selected movies as input
+#No output
 def RatingNormalizer(userSelectedMovies):
 
     total = 0
@@ -143,9 +143,9 @@ def GetUrl(movieID):
 
 
 
-#
-#
-#
+#Creates a dictionary of recommended movies through collaborative filtering
+#No input
+#No output
 def CollaborativeFilteringMoviesList():
 
     CollaborativeFilteredMovies = {}
@@ -161,9 +161,9 @@ def CollaborativeFilteringMoviesList():
 
 
 
-#
-#
-#
+#Finds a similar user based on good ratings for the same movie
+#Takes user selected movies as input
+#No output
 def FindSimilarUser(userSelectedMovies):
 
     for movie in userSelectedMovies:
@@ -179,9 +179,9 @@ def FindSimilarUser(userSelectedMovies):
 
 
 
-#
-#
-#
+#Calculates the Pearson Correlatin Coefficient between new user and recorded user
+#Takes user ID of recorded user as input
+#No output
 def PearsonCoefficient(userID):
 
     file3.seek(0)
@@ -209,9 +209,9 @@ def PearsonCoefficient(userID):
             return cosine
 
 
-#
-#
-#
+#Generates a dictionary of recommended movies from ContentFilteredMovies and CollaborativeFilteredMovies
+#No input
+#No output
 @get('/recommended')
 def GetRecommended():
 
@@ -225,6 +225,7 @@ def GetRecommended():
         if str(movieID) not in str(userSelectedMovies):
             recommendedMovies.update({movieID : CollaborativeFilteredMovies[movieID]})
 
+    return recommendedMovies
 
 
 run(reloader=True, debug=True)
