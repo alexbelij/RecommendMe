@@ -1,6 +1,5 @@
 from bottle import run, get, post, request
 import csv
-import random
 import urllib.parse
 import urllib.request
 import bs4
@@ -11,21 +10,13 @@ import yaml
 
 #FILES
 moviesFileName = 'Movies.csv'
-#ratingsFileName = 'Ratings.csv'
 normalizedRatingFileName = 'NormalizedRatingDictionary.csv'
-likedUsersFileName = 'LikedUsers.csv'
 
 file1 = open(moviesFileName, "rt", encoding="utf-8")
 movieReader = csv.reader(file1)
 
-#file2 = open(ratingsFileName, "rt", encoding="utf-8")
-#ratingReader = csv.reader(file2)
-
-file3 = open(normalizedRatingFileName, "rt", encoding="utf-8")
-normalizedRatingReader = csv.reader(file3)
-
-file4 = open(likedUsersFileName, "rt", encoding="utf-8")
-LikedUsersReader = csv.reader(file4)
+file2 = open(normalizedRatingFileName, "rt", encoding="utf-8")
+normalizedRatingReader = csv.reader(file2)
 
 
 #GLOBAL VARIABLES
@@ -33,14 +24,14 @@ global userGenreCounter
 userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Romance' : 0, 'Thriller' : 0, 'Mystery' : 0, 'Horror' : 0, 'Animation' : 0, 'Adventure' : 0}
 #For Content Filtering Method
 
-global BestMatchingMovies
-BestMatchingMovies = {} #Stores IDs and IMDb URLs of best matching movies through content filtering
+global ContentFilteredMovies
+ContentFilteredMovies = {} #Stores IDs and IMDb URLs of best matching movies through content filtering
 
 global CollaborativeFilteredMovies
 CollaborativeFilteredMovies = {} #Stores IDs and IMDb URLs of the best matching movies through collaborative Filtering
 
 global normalizedUserRatings
-normalizedUserRatings = {}
+normalizedUserRatings = {} #Stores the normalized ratings of the user
 
 
 
@@ -102,8 +93,7 @@ def RatingNormalizer(userSelectedMovies):
 def ContentFiltering():
 
     notEmpty = False
-    ContentFilteredMovies = {}
-    BestMatchingMovies = {}
+    BestMovies = {}
     SortedFilteredMovies = []
 
     file1.seek(0)
@@ -113,15 +103,14 @@ def ContentFiltering():
             if str(genre) in userGenreCounter:
                 TotalGenreMatch += userGenreCounter[genre]
 
-        ContentFilteredMovies.update({row[0] : TotalGenreMatch})
+        BestMovies.update({row[0] : TotalGenreMatch})
 
-    SortedFilteredMovies = sorted(ContentFilteredMovies, key=ContentFilteredMovies.__getitem__, reverse = True)
+    SortedFilteredMovies = sorted(BestMovies, key=BestMovies.__getitem__, reverse = True)
 
     for i in range(0, 10):
         url = GetUrl(SortedFilteredMovies[i])
-        BestMatchingMovies.update({SortedFilteredMovies[i] : url})
+        ContentFilteredMovies.update({SortedFilteredMovies[i] : url})
         i = i + 1
-    print(BestMatchingMovies)
 
 
 #Returns the IMDb URL of the movie
@@ -148,21 +137,25 @@ def GetUrl(movieID):
 #No output
 def CollaborativeFiltering():
 
-    CollaborativeFilteredMovies = {}
+    tempDict2 = {}
     similarUser = FindSimilarUser(userSelectedMovies)
-    file3.seek(0)
-    i = 0
+    file2.seek(0)
     for row in normalizedRatingReader:
         if str(row[0]) == str(similarUser):
             tempDict = yaml.load(row[1])
             for movie in tempDict:
-                if i == 4:
-                    break
-                i = i + 1
                 if tempDict[movie] > 0:
-                    url = GetUrl(movie)
-                    CollaborativeFilteredMovies.update({movie : url})
-    print(CollaborativeFilteredMovies)
+                    tempDict2.update({movie : tempDict[movie]})
+                
+    SortedCollFilteredMovies = sorted(tempDict2, key=tempDict2.__getitem__, reverse=True)
+
+    i = 0
+    for movie in  SortedCollFilteredMovies:
+        if i == 10:
+            break
+        i = i + 1
+        url = GetUrl(movie)
+        CollaborativeFilteredMovies.update({movie : url})
 
 
 #Finds a similar user based on good ratings for the same movie
@@ -170,15 +163,27 @@ def CollaborativeFiltering():
 #No output
 def FindSimilarUser(userSelectedMovies):
 
-    mostLikedMovie = FindMostLikedMovie(normalizedUserRatings)
-    file4.seek(0)
-    for row2 in LikedUsersReader:
-        if str(row2[0]) == str(mostLikedMovie):
-            tempDict = yaml.load(row2[1])
-            if tempDict:
-                for user in tempDict:
-                    if PearsonCoefficient(int(user)) > '''threshold''':
-                        return user
+    file2.seek(0)
+    
+    for row in normalizedRatingReader:
+        break
+    similarUser = row[0]
+    tempDict2 = yaml.load(row[1])
+    commonMoviesCount = len(tempDict2.keys() & userSelectedMovies.keys())
+    PearCo = PearsonCoefficient(row[0])
+
+    file2.seek(0)
+    for row in normalizedRatingReader:
+        tempDict2 = yaml.load(row[1])
+        tempCount = len(tempDict2.keys() & userSelectedMovies.keys())
+        if tempCount > commonMoviesCount:
+            tempCo = PearsonCoefficient(row[0])
+            if tempCo > PearCo:
+                PearCo = tempCo
+                similarUser = row[0]
+                commonMoviesCount = tempCount
+
+    return similarUser
 
 
 
@@ -201,7 +206,7 @@ def FindMostLikedMovie(normalizedUserRatings):
 #No output
 def PearsonCoefficient(userID):
 
-    file3.seek(0)
+    file2.seek(0)
     for row in normalizedRatingReader:
         if str(row[0]) == str(userID):
             temp = []
@@ -223,7 +228,6 @@ def PearsonCoefficient(userID):
             b = np.array(temp)
 
             cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))
-
             return cosine
 
 
@@ -234,16 +238,13 @@ def PearsonCoefficient(userID):
 def GetRecommended():
 
     recommendedMovies = {}
-    print(BestMatchingMovies)
-    print(CollaborativeFilteredMovies)
-    for movieID in BestMatchingMovies:
-        if str(movieID) not in str(userSelectedMovies):
-            recommendedMovies.update({movieID : BestMatchingMovies[movieID]})
+    for movieID in ContentFilteredMovies:
+        if str(movieID) not in userSelectedMovies and str(movieID) not in recommendedMovies:
+            recommendedMovies.update({movieID : ContentFilteredMovies[movieID]})
 
     for movieID in CollaborativeFilteredMovies:
-        if str(movieID) not in str(userSelectedMovies):
+        if str(movieID) not in userSelectedMovies and str(movieID) not in recommendedMovies:
             recommendedMovies.update({movieID : CollaborativeFilteredMovies[movieID]})
-
 
     return recommendedMovies
 
