@@ -25,10 +25,10 @@ userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Roma
 #For Content Filtering Method
 
 global ContentFilteredMovies
-ContentFilteredMovies = {} #Stores IDs and IMDb URLs of best matching movies through content filtering
+ContentFilteredMovies = [] #Stores IDs of best matching movies through content filtering
 
 global CollaborativeFilteredMovies
-CollaborativeFilteredMovies = {} #Stores IDs and IMDb URLs of the best matching movies through collaborative Filtering
+CollaborativeFilteredMovies = [] #Stores IDs of the best matching movies through collaborative Filtering
 
 global normalizedUserRatings
 normalizedUserRatings = {} #Stores the normalized ratings of the user
@@ -46,8 +46,6 @@ def GetMovieListAndGenreCount():
 
     GenreCounterUpdater(userSelectedMovies)
     RatingNormalizer(userSelectedMovies)
-    ContentFiltering()
-    CollaborativeFiltering()
 
 
 
@@ -67,6 +65,8 @@ def GenreCounterUpdater(userSelectedMovies):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += userSelectedMovies[userMovieID]
                 break
+    
+    ContentFiltering()
 
 
 
@@ -84,6 +84,8 @@ def RatingNormalizer(userSelectedMovies):
     
     for movie in userSelectedMovies:
         normalizedUserRatings.update({str(movie) : userSelectedMovies[movie] - average})
+
+    CollaborativeFiltering()
 
 
 
@@ -108,8 +110,7 @@ def ContentFiltering():
     SortedFilteredMovies = sorted(BestMovies, key=BestMovies.__getitem__, reverse = True)
 
     for i in range(0, 10):
-        url = GetUrl(SortedFilteredMovies[i])
-        ContentFilteredMovies.update({SortedFilteredMovies[i] : url})
+        ContentFilteredMovies.append(SortedFilteredMovies[i])
         i = i + 1
 
 
@@ -150,12 +151,11 @@ def CollaborativeFiltering():
     SortedCollFilteredMovies = sorted(tempDict2, key=tempDict2.__getitem__, reverse=True)
 
     i = 0
-    for movie in  SortedCollFilteredMovies:
+    for movie in SortedCollFilteredMovies:
         if i == 10:
             break
         i = i + 1
-        url = GetUrl(movie)
-        CollaborativeFilteredMovies.update({movie : url})
+        CollaborativeFilteredMovies.append(movie)
 
 
 #Finds a similar user based on good ratings for the same movie
@@ -240,11 +240,13 @@ def GetRecommended():
     recommendedMovies = {}
     for movieID in ContentFilteredMovies:
         if str(movieID) not in userSelectedMovies and str(movieID) not in recommendedMovies:
-            recommendedMovies.update({movieID : ContentFilteredMovies[movieID]})
+            url = GetUrl(movieID)
+            recommendedMovies.update({movieID : url})
 
     for movieID in CollaborativeFilteredMovies:
         if str(movieID) not in userSelectedMovies and str(movieID) not in recommendedMovies:
-            recommendedMovies.update({movieID : CollaborativeFilteredMovies[movieID]})
+            url = GetUrl(movieID)
+            recommendedMovies.update({movieID : url})
 
     return recommendedMovies
 
