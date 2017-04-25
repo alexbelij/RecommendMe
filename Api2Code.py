@@ -25,13 +25,13 @@ userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Roma
 #For Content Filtering Method
 
 global ContentFilteredMovies
-ContentFilteredMovies = [] #Stores IDs of best matching movies through content filtering
+ContentFilteredMovies = [] #List to store IDs of best matching movies through content filtering
 
 global CollaborativeFilteredMovies
-CollaborativeFilteredMovies = [] #Stores IDs of the best matching movies through collaborative Filtering
+CollaborativeFilteredMovies = [] #List to store IDs of the best matching movies through collaborative Filtering
 
 global normalizedUserRatings
-normalizedUserRatings = {} #Stores the normalized ratings of the user
+normalizedUserRatings = {} #Dictionary to store the movie ID and normalized ratings of the user
 
 
 
@@ -76,11 +76,11 @@ def GenreCounterUpdater(userSelectedMovies):
 def RatingNormalizer(userSelectedMovies):
 
     total = 0
-    i = 0
+    count = 0
     for movie in userSelectedMovies:
         total += userSelectedMovies[movie]
-        i = i + 1
-    average = total / i
+        count = count + 1
+    average = total / count
     
     for movie in userSelectedMovies:
         normalizedUserRatings.update({str(movie) : userSelectedMovies[movie] - average})
@@ -164,7 +164,6 @@ def CollaborativeFiltering():
 def FindSimilarUser(userSelectedMovies):
 
     file2.seek(0)
-    
     for row in normalizedRatingReader:
         break
     similarUser = row[0]
