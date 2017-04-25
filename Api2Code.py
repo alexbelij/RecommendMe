@@ -186,20 +186,6 @@ def FindSimilarUser(userSelectedMovies):
 
 
 
-#Searches for the most liked movie 
-#Takes normalized user ratings as input
-#NO output
-def FindMostLikedMovie(normalizedUserRatings):
-
-    mostLiked = next(iter(normalizedUserRatings))
-    for movie in normalizedUserRatings:
-        if normalizedUserRatings[movie] > normalizedUserRatings[mostLiked]:
-            mostLiked = movie
-
-    return mostLiked
-
-
-
 #Calculates the Pearson Correlatin Coefficient between new user and recorded user
 #Takes user ID of recorded user as input
 #No output
