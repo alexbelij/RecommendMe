@@ -65,7 +65,6 @@ def GenreCounterUpdater(userSelectedMovies):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += userSelectedMovies[userMovieID]
                 break
-    print(userGenreCounter)
     ContentFiltering()
 
 
@@ -110,8 +109,9 @@ def ContentFiltering():
     SortedFilteredMovies = sorted(BestMovies, key=BestMovies.__getitem__, reverse = True)
 
     for i in range(0, 10):
-        ContentFilteredMovies.append(SortedFilteredMovies[i])
-        i = i + 1
+        if SortedFilteredMovies[i] not in userSelectedMovies:
+            ContentFilteredMovies.append(SortedFilteredMovies[i])
+            i = i + 1
 
 
 #Returns the IMDb URL of the movie
