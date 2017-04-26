@@ -65,6 +65,7 @@ def GenreCounterUpdater(userSelectedMovies):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += userSelectedMovies[userMovieID]
                 break
+    print(userGenreCounter)
     ContentFiltering()
 
 
@@ -153,8 +154,9 @@ def CollaborativeFiltering():
     for movie in SortedCollFilteredMovies:
         if i == 10:
             break
-        i = i + 1
-        CollaborativeFilteredMovies.append(movie)
+        if movie not in userSelectedMovies:
+            i = i + 1
+            CollaborativeFilteredMovies.append(movie)
 
 
 #Finds a similar user based on good ratings for the same movie
