@@ -65,7 +65,7 @@ def GenreCounterUpdater(userSelectedMovies):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += userSelectedMovies[userMovieID]
                 break
-    
+    print(userGenreCounter)
     ContentFiltering()
 
 
@@ -196,22 +196,21 @@ def PearsonCoefficient(userID):
         if str(row[0]) == str(userID):
             temp = []
             userRatingArray = []
-            user = userSelectedMovies
+            user = normalizedUserRatings
             comp = yaml.load(row[1])
             for movie in comp:
-                if str(movie) not in userSelectedMovies:
+                if str(movie) not in normalizedUserRatings:
                     userRatingArray.append(0)
                 else:
-                    userRatingArray.append(userSelectedMovies[movie])
+                    userRatingArray.append(normalizedUserRatings[movie])
                 temp.append(yaml.load(row[1])[movie])
-            for movie in userSelectedMovies:
+            for movie in normalizedUserRatings:
                 if str(movie) not in yaml.load(row[1]):
-                    userRatingArray.append(userSelectedMovies[movie])
+                    userRatingArray.append(normalizedUserRatings[movie])
                     temp.append(0)
 
             a = np.array(userRatingArray)
             b = np.array(temp)
-
             cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))
             return cosine
 
