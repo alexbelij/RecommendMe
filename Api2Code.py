@@ -65,7 +65,6 @@ def GenreCounterUpdater(userSelectedMovies):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += userSelectedMovies[userMovieID]
                 break
-    print(userGenreCounter)
     ContentFiltering()
 
 
