@@ -29,9 +29,6 @@ global userGenreCounter
 userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Romance' : 0, 'Thriller' : 0, 'Mystery' : 0, 'Horror' : 0, 'Animation' : 0, 'Adventure' : 0}
 #For Content Filtering Method
 
-global normalizedUserGenreRatings
-normalizedUserGenreRatings = [] #Stores the count of each genre in the user's selected movies
-
 global b
 b = [] #Stores the NP Array of user's genre rating
 
@@ -53,7 +50,6 @@ def GetMovieListAndGenreCount():
     userSelectedMovies = request.json.get('selectedmovieslist')
 
     RatingNormalizer(userSelectedMovies)
-    SortUsers()
 
     redirect('/recommended')
 
@@ -87,6 +83,8 @@ def GenreCounterUpdater(normalizedMovieRatingsDict):
 
     for genre in userGenreCounter:
         userGenreCounter[genre] = 0 #Resetting all genre counts to zero
+    
+    normalizedUserGenreRatings = []
 
     for userMovieID in normalizedMovieRatingsDict:
         file1.seek(0)
@@ -96,15 +94,18 @@ def GenreCounterUpdater(normalizedMovieRatingsDict):
                     if genre in userGenreCounter:
                         userGenreCounter[genre] += round(normalizedMovieRatingsDict[userMovieID], 2)
                 break
+
     for genre in userGenreCounter:
-        normalizedUserGenreRatings.append(userGenreCounter[genre])\
+        normalizedUserGenreRatings.append(userGenreCounter[genre])
+    
+    SortUsers(normalizedUserGenreRatings)
 
 
 
 #Sorts the stored users based on the cosine angle between the rating vectors of the stored user and new user
 #No input
 #No output
-def SortUsers():
+def SortUsers(normalizedUserGenreRatings):
 
     pearsonCoefficientDict = {}
     file2.seek(0)
@@ -129,7 +130,8 @@ def PearsonCoefficient(genreCountList, b):
 
     a = np.array(genreCountList)
 
-    cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))    
+    cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))
+
     return cosine
 
 
@@ -152,6 +154,7 @@ def SelectMovies(topUsers):
                             recommendedMoviesTempDict.update({i : tempDict[i]})
 
     recommendedMoviesList = sorted(recommendedMoviesTempDict, key = recommendedMoviesTempDict.__getitem__, reverse = True)
+
     for i in range(0, 15):
         url = GetUrl(recommendedMoviesList[i])
         recommendedMoviesDict.update({recommendedMoviesList[i] : url})
