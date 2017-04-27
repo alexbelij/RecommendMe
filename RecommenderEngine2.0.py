@@ -30,7 +30,7 @@ userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Roma
 #For Content Filtering Method
 
 global normalizedUserGenreRatings
-normalizedUserGenreRatings = []
+normalizedUserGenreRatings = [] #Stores the count of each genre in the user's selected movies
 
 global b
 b = [] #Stores the NP Array of user's genre rating
