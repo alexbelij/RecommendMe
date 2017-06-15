@@ -12,6 +12,7 @@ import ast
 moviesFileName = 'Movies.csv'
 genreCountFileName = 'GenreCount.csv'
 normalizedRatingDictionaryFileName = 'NormalizedRatingDictionary.csv'
+storedURLFileName = 'URL.csv'
 
 file1 = open(moviesFileName, "rt", encoding="utf-8")
 movieReader = csv.reader(file1)
@@ -21,6 +22,9 @@ genreCountReader = csv.reader(file2)
 
 file3 = open(normalizedRatingDictionaryFileName, "rt", encoding="utf-8")
 normalizedRatingReader = csv.reader(file3)
+
+file4 = open(storedURLFileName, "rt", encoding="utf-8")
+urlReader = csv.reader(file4)
 
 
 
@@ -49,6 +53,8 @@ def GetMovieListAndGenreCount():
     global userSelectedMovies
     userSelectedMovies = request.json.get('selectedmovieslist')
 
+    file4.seek(0)
+
     RatingNormalizer(userSelectedMovies)
 
     redirect('/recommended')
@@ -68,10 +74,10 @@ def RatingNormalizer(userSelectedMovies):
         total += userSelectedMovies[movie]
         count = count + 1
     average = total / count
-    
+
     for movie in userSelectedMovies:
         normalizedMovieRatingsDict.update({str(movie) : userSelectedMovies[movie] - average})
-    
+
     GenreCounterUpdater(normalizedMovieRatingsDict)
 
 
@@ -83,7 +89,7 @@ def GenreCounterUpdater(normalizedMovieRatingsDict):
 
     for genre in userGenreCounter:
         userGenreCounter[genre] = 0 #Resetting all genre counts to zero
-    
+
     normalizedUserGenreRatings = []
 
     for userMovieID in normalizedMovieRatingsDict:
@@ -97,7 +103,7 @@ def GenreCounterUpdater(normalizedMovieRatingsDict):
 
     for genre in userGenreCounter:
         normalizedUserGenreRatings.append(userGenreCounter[genre])
-    
+
     SortUsers(normalizedUserGenreRatings)
 
 
@@ -166,16 +172,13 @@ def SelectMovies(topUsers):
 #Returns URL of the movie
 def GetUrl(movieID):
 
-    file1.seek(0)
-    for row in movieReader:
-        if str(row[0]) == str(movieID):
-            movieSearchTerm = row[1] + " imdb"
-            SearchUrl = r'https://www.google.co.in/search?q=' + urllib.parse.quote_plus(movieSearchTerm)
-            searchResult = requests.get(SearchUrl)
-            searchResult.raise_for_status()
-            soup = bs4.BeautifulSoup(searchResult.text, 'html.parser')
-            IMDbID = str(soup.find('cite'))[32:41]
-            url = "http://www.imdb.com/title/" + IMDbID
+    #file4.seek(0)
+    #As the Movie IDs are in ascending order, there is no need to reset the file reader to starting
+    url = ""
+    for row4 in urlReader:
+        if str(movieID) == str(row4[0]):
+            url = str(row4[1])
+            break
     return url
 
 
