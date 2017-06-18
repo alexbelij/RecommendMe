@@ -155,7 +155,7 @@ def SelectMovies(topUsers):
             if str(row[0]) == str(j):
                 tempDict = yaml.load(row[1])
                 for i in tempDict:
-                    if tempDict[i] > 0:
+                    if tempDict[i] > 0:	#If the normalized rating is greater than 0, the user liked it
                         if i not in recommendedMoviesTempDict:
                             recommendedMoviesTempDict.update({i : tempDict[i]})
 
@@ -167,7 +167,7 @@ def SelectMovies(topUsers):
 
 
 
-#Returns the IMDb URL of the movie
+#Returns the IMDb or Rotten Tomatoes URL of the movie
 #Takes movie ID as input
 #Returns URL of the movie
 def GetUrl(movieID):
