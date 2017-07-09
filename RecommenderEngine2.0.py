@@ -1,12 +1,11 @@
-from bottle import run, get, post, request, redirect
+from flask import Flask, request, redirect, url_for, jsonify
 import csv
-import urllib.parse
-import urllib.request
-import bs4
 import requests
 import numpy as np
 import yaml
 import ast
+
+app = Flask(__name__)
 
 #FILES
 moviesFileName = 'Movies.csv'
@@ -29,17 +28,13 @@ urlReader = csv.reader(file4)
 
 
 #GLOBAL VARIABLES
-global userGenreCounter
 userGenreCounter = {'Comedy' : 0, 'Action' : 0, 'Sci-Fi' : 0, 'Drama' : 0, 'Romance' : 0, 'Thriller' : 0, 'Mystery' : 0, 'Horror' : 0, 'Animation' : 0, 'Adventure' : 0}
 #For Content Filtering Method
 
-global b
 b = [] #Stores the NP Array of user's genre rating
 
-global topUsers
 topUsers = [] #Stores list of similar users in decreasing order of Pearson Coefficient with user
 
-global recommendedMoviesDict
 recommendedMoviesDict = {} #Stores recommended movies and the IMDb URLs of those movies
 
 
@@ -47,17 +42,17 @@ recommendedMoviesDict = {} #Stores recommended movies and the IMDb URLs of those
 #Post request which accepts selected movies and ratings
 #Selected movies and ratings in JSON format
 #No output
-@post('/selectedmovies')
+@app.route('/selectedmovies', methods=['POST'])
 def GetMovieListAndGenreCount():
 
     global userSelectedMovies
-    userSelectedMovies = request.json.get('selectedmovieslist')
+    userSelectedMovies = (request.json)['selectedmovieslist']
 
     file4.seek(0)
 
     RatingNormalizer(userSelectedMovies)
 
-    redirect('/recommended')
+    return redirect(url_for('GetRecommendedMovies'))
 
 
 
@@ -87,6 +82,7 @@ def RatingNormalizer(userSelectedMovies):
 #No output
 def GenreCounterUpdater(normalizedMovieRatingsDict):
 
+    global userGenreCounter
     for genre in userGenreCounter:
         userGenreCounter[genre] = 0 #Resetting all genre counts to zero
 
@@ -122,6 +118,7 @@ def SortUsers(normalizedUserGenreRatings):
         pearsonCoefficientDict.update({row[0] : pearCo})
 
     sortedUsers = sorted(pearsonCoefficientDict, key = pearsonCoefficientDict.__getitem__, reverse = True)
+    global topUsers
     for i in range(0, 5):
         topUsers.append(sortedUsers[i])
 
@@ -159,8 +156,10 @@ def SelectMovies(topUsers):
                         if i not in recommendedMoviesTempDict:
                             recommendedMoviesTempDict.update({i : tempDict[i]})
 
+    global recommendedMoviesList
     recommendedMoviesList = sorted(recommendedMoviesTempDict, key = recommendedMoviesTempDict.__getitem__, reverse = True)
 
+    global recommendedMoviesDict
     for i in range(0, 15):
         url = GetUrl(recommendedMoviesList[i])
         recommendedMoviesDict.update({recommendedMoviesList[i] : url})
@@ -186,11 +185,13 @@ def GetUrl(movieID):
 #Get request to display the recommended movies
 #No input
 #Returns a dictionary of recommended movies and their IMDb URLs
-@get('/recommended')
+@app.route('/recommended', methods=['GET'])
 def GetRecommendedMovies():
 
-    return recommendedMoviesDict
+    return jsonify(recommendedMoviesDict)
 
 
 
-run(reloader=True, debug=True)
+#run(reloader=True, debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
