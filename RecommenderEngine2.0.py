@@ -38,12 +38,13 @@ recommended_movies_dict = {} #Stores recommended movies and the IMDb URLs of tho
 
 
 
-#Post request which accepts selected movies and ratings
-#Selected movies and ratings in JSON format
-#No output
 @app.route('/selectedmovies', methods=['POST'])
 def GetMovieListAndGenreCount():
-
+    """
+    Post request which accepts selected movies and ratings.
+    Selected movies and ratings in JSON format.
+    No output.
+    """
     global user_selected_movies
     user_selected_movies = (request.json)['selectedmovieslist']
 
@@ -54,12 +55,13 @@ def GetMovieListAndGenreCount():
     return redirect(url_for('GetRecommendedMovies'))
 
 
-
-#Normalizes the user's ratings
-#Takes user selected movies as input
-#No output
+  
 def RatingNormalizer(user_selected_movies):
-
+    """
+    Normalizes the user's ratings.
+    Takes user selected movies as input.
+    No output.
+    """
     normalized_movies_rating_dict = {}
     total = 0
     count = 0
@@ -76,11 +78,12 @@ def RatingNormalizer(user_selected_movies):
 
 
 
-#Updates the genre count based on selected movies and ratings
-#Takes selected movies and rating dictionary as input
-#No output
 def GenreCounterUpdater(normalized_movies_rating_dict):
-
+    """
+    Updates the genre count based on selected movies and ratings.
+    Takes selected movies and rating dictionary as input.
+    No output.
+    """
     global user_genre_counter
     for genre in user_genre_counter:
         user_genre_counter[genre] = 0 #Resetting all genre counts to zero
@@ -103,11 +106,12 @@ def GenreCounterUpdater(normalized_movies_rating_dict):
 
 
 
-#Sorts the stored users based on the cosine angle between the rating vectors of the stored user and new user
-#No input
-#No output
 def SortUsers(normalized_user_genre_ratings):
-
+    """
+    Sorts the stored users based on the cosine angle between the rating vectors of the stored user and new user.
+    No input.
+    No output.
+    """
     pearson_coefficient_dict = {}
     file2.seek(0)
     b = np.array(normalized_user_genre_ratings)
@@ -125,11 +129,12 @@ def SortUsers(normalized_user_genre_ratings):
 
 
 
-#Calculates the cosine angle between the stored user's and new user's rating vectors
-#Takes rating lists as input
-#Returns cosine angle between rating vectors
 def PearsonCoefficient(genre_count_list, b):
-
+    """
+    Calculates the cosine angle between the stored user's and new user's rating vectors.
+    Takes rating lists as input.
+    Returns cosine angle between rating vectors.
+    """
     a = np.array(genre_count_list)
 
     cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))
@@ -138,11 +143,12 @@ def PearsonCoefficient(genre_count_list, b):
 
 
 
-#Generates a list of movies with good ratings between all the most similar users
-#Takes list of top 5 most similar users
-#No output
 def SelectMovies(top_users):
-
+    """
+    Generates a list of movies with good ratings between all the most similar users.
+    Takes list of top 5 most similar users.
+    No output.
+    """
     recommended_movies_temp_dict = {}
 
     for j in top_users:
@@ -165,11 +171,12 @@ def SelectMovies(top_users):
 
 
 
-#Returns the IMDb or Rotten Tomatoes URL of the movie
-#Takes movie ID as input
-#Returns URL of the movie
 def GetUrl(movie_ID):
-
+    """
+    Returns the IMDb or Rotten Tomatoes URL of the movie.
+    Takes movie ID as input.
+    Returns URL of the movie.
+    """
     #file4.seek(0)
     #As the Movie IDs are in ascending order, there is no need to reset the file reader to starting
     url = ""
@@ -181,16 +188,16 @@ def GetUrl(movie_ID):
 
 
 
-#Get request to display the recommended movies
-#No input
-#Returns a dictionary of recommended movies and their IMDb URLs
 @app.route('/recommended', methods=['GET'])
 def GetRecommendedMovies():
-
+    """
+    GET request to display the recommended movies.
+    No input.
+    Returns a dictionary of recommended movies and their IMDb URLs.
+    """
     return jsonify(recommended_movies_dict)
 
 
 
-#run(reloader=True, debug=True)
 if __name__ == "__main__":
     app.run(debug=True)
