@@ -39,7 +39,7 @@ recommended_movies_dict = {} #Stores recommended movies and the IMDb URLs of tho
 
 
 @app.route('/selectedmovies', methods=['POST'])
-def GetMovieListAndGenreCount():
+def get_movie_list_and_genre_count():
     """
     Post request which accepts selected movies and ratings.
     Selected movies and ratings in JSON format.
@@ -50,13 +50,13 @@ def GetMovieListAndGenreCount():
 
     file4.seek(0)
 
-    RatingNormalizer(user_selected_movies)
+    rating_normalizer(user_selected_movies)
 
-    return redirect(url_for('GetRecommendedMovies'))
+    return redirect(url_for('get_recommended_movies'))
 
 
   
-def RatingNormalizer(user_selected_movies):
+def rating_normalizer(user_selected_movies):
     """
     Normalizes the user's ratings.
     Takes user selected movies as input.
@@ -74,11 +74,11 @@ def RatingNormalizer(user_selected_movies):
     for movie in user_selected_movies:
         normalized_movies_rating_dict.update({str(movie) : user_selected_movies[movie] - average})
 
-    GenreCounterUpdater(normalized_movies_rating_dict)
+    genre_counter_updater(normalized_movies_rating_dict)
 
 
 
-def GenreCounterUpdater(normalized_movies_rating_dict):
+def genre_counter_updater(normalized_movies_rating_dict):
     """
     Updates the genre count based on selected movies and ratings.
     Takes selected movies and rating dictionary as input.
@@ -102,11 +102,11 @@ def GenreCounterUpdater(normalized_movies_rating_dict):
     for genre in user_genre_counter:
         normalized_user_genre_ratings.append(user_genre_counter[genre])
 
-    SortUsers(normalized_user_genre_ratings)
+    sort_users(normalized_user_genre_ratings)
 
 
 
-def SortUsers(normalized_user_genre_ratings):
+def sort_users(normalized_user_genre_ratings):
     """
     Sorts the stored users based on the cosine angle between the rating vectors of the stored user and new user.
     No input.
@@ -117,7 +117,7 @@ def SortUsers(normalized_user_genre_ratings):
     b = np.array(normalized_user_genre_ratings)
 
     for row in genre_count_reader:
-        pearCo = PearsonCoefficient(ast.literal_eval(row[1]), b)
+        pearCo = perason_coefficient(ast.literal_eval(row[1]), b)
         pearson_coefficient_dict.update({row[0] : pearCo})
 
     sorted_users = sorted(pearson_coefficient_dict, key = pearson_coefficient_dict.__getitem__, reverse = True)
@@ -125,11 +125,11 @@ def SortUsers(normalized_user_genre_ratings):
     for i in range(0, 5):
         top_users.append(sorted_users[i])
 
-    SelectMovies(top_users)
+    select_movies(top_users)
 
 
 
-def PearsonCoefficient(genre_count_list, b):
+def perason_coefficient(genre_count_list, b):
     """
     Calculates the cosine angle between the stored user's and new user's rating vectors.
     Takes rating lists as input.
@@ -143,7 +143,7 @@ def PearsonCoefficient(genre_count_list, b):
 
 
 
-def SelectMovies(top_users):
+def select_movies(top_users):
     """
     Generates a list of movies with good ratings between all the most similar users.
     Takes list of top 5 most similar users.
@@ -166,12 +166,12 @@ def SelectMovies(top_users):
 
     global recommended_movies_dict
     for i in range(0, 15):
-        url = GetUrl(recommended_movies_list[i])
+        url = get_url(recommended_movies_list[i])
         recommended_movies_dict.update({recommended_movies_list[i] : url})
 
 
 
-def GetUrl(movie_ID):
+def get_url(movie_ID):
     """
     Returns the IMDb or Rotten Tomatoes URL of the movie.
     Takes movie ID as input.
@@ -189,7 +189,7 @@ def GetUrl(movie_ID):
 
 
 @app.route('/recommended', methods=['GET'])
-def GetRecommendedMovies():
+def get_recommended_movies():
     """
     GET request to display the recommended movies.
     No input.
