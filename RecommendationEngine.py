@@ -21,7 +21,7 @@ def genres():
     In GET request, the genres are sent back to the user.
     """
     if request.method == 'GET':
-        genres = {'genres' : GENRES}
+        genres = {'Genres' : GENRES}
         response = app.response_class(
             response=json.dumps(genres),
             status=200,
@@ -68,7 +68,7 @@ def movies():
                     if genre.lower() in GENRES:
                         genres.append(genre.lower())
                 movies.append({'ID' : movie[0], 'Title' : str(movie[1])[:-7], 'Year' : str(movie[1][-5:-1]), 'Genres' : genres})
-            movie_dict = {'movies' : movies}
+            movie_dict = {'Movies' : movies}
             response = app.response_class(
                 response=json.dumps(movie_dict),
                 status=200,
@@ -187,17 +187,20 @@ def accept_data():
         content_movie_details = get_details(content_filtered_movies)
         collaborative_movie_details = get_details(collaborative_filtered_movies)
 
+        # Sending back recommendations
         response = app.response_class(
-        response=json.dumps({'Recommendations' : [{'ContentFilteredMovies' : content_movie_details}, {'CollaborativeFilteredMovies' : collaborative_movie_details}]}),
+        response=json.dumps({'Recommendations' : content_movie_details + collaborative_movie_details}),
         status=200,
         mimetype='application/json'
         )
+
         return response
 
 
 
 def collaborative_filtering(user_np_array):
     """
+    Returns a list of the top 10 movies liked by similar users.
     """
     collaborative_filtered_movies = []
     cur.execute("SELECT * FROM genre_rating")
