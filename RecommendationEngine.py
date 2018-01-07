@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect
 import json
 import pymysql
+import numpy as np
 import ast
 import os
 
@@ -80,6 +81,7 @@ def movies():
 @app.route("/details")
 def return_details():
     """
+    Returns the details of the movie corresponding to the movie ID.
     """
     if request.method == 'GET':
         movie_id = request.args.get('ID', None)
@@ -172,18 +174,61 @@ def accept_data():
 
         # Getting value of each genre
         normalized_user_genre_counter = genre_count(normalized_rating)
+        user_np_array = []
+        for i in normalized_user_genre_counter:
+            user_np_array.append(normalized_user_genre_counter[i])
+
+        collaborative_filtered_movies = collaborative_filtering(user_np_array)
+
         user_genre_counter = normal_genre_count(data)
 
         content_filtered_movies = content_filtering(user_genre_counter)
 
-        movie_details = get_details(content_filtered_movies)
+        content_movie_details = get_details(content_filtered_movies)
+        collaborative_movie_details = get_details(collaborative_filtered_movies)
 
         response = app.response_class(
-        response=json.dumps({'Content Filtered Movies' : movie_details}),
+        response=json.dumps({'Recommendations' : [{'ContentFilteredMovies' : content_movie_details}, {'CollaborativeFilteredMovies' : collaborative_movie_details}]}),
         status=200,
         mimetype='application/json'
         )
         return response
+
+
+
+def collaborative_filtering(user_np_array):
+    """
+    """
+    collaborative_filtered_movies = []
+    cur.execute("SELECT * FROM genre_rating")
+    user_coeffs = {}
+    for i in cur.fetchall():
+        stored_user_np_array = ast.literal_eval(i[1])
+        co_efficient = pearson_coefficient(np.array(user_np_array), np.array(stored_user_np_array))
+        user_coeffs.update({i[0] : co_efficient})
+    sorted_user_coeffs = sorted(user_coeffs, key=user_coeffs.get, reverse=True)
+    cur.execute("SELECT rating FROM movie_rating WHERE user_id in ({})".format(",".join([str(i) for i in sorted_user_coeffs[:10]])))
+    for i in cur.fetchall():
+        rating_dict = ast.literal_eval(i[0])
+        sorted_rating_dict = sorted(rating_dict, key=rating_dict.get, reverse=True)
+        for i in sorted_rating_dict:
+            collaborative_filtered_movies.append(i)
+            break # Only one movie per user.
+
+    return collaborative_filtered_movies
+
+
+
+def pearson_coefficient(user_np_array, stored_user_np_array):
+    """
+    Returns the cosine of the angle between the numpy arrays.
+    """
+    a = user_np_array
+    b = stored_user_np_array
+    cosine = (np.dot(a, b)) / ((np.sqrt((a * a).sum())) * np.sqrt((b * b).sum()))
+    return cosine
+
+
 
 def get_details(movie_list): # Done
     """
@@ -231,6 +276,7 @@ def normal_genre_count(data): # Done
         genres = (cur.fetchone()[0]).split("|")
 
         for genre in genres:
+            # Removing unnecessary genres
             if genre.lower() in genre_rating:
                 genre_rating[genre.lower()] += data[movie_id]
 
