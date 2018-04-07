@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-db = pymysql.connect(host="localhost", user="root", passwd="shamanmb", db="MovieDB")
+db = pymysql.connect(host="localhost", user="root", passwd="******", db="MovieDB")
 cur = db.cursor()
 
 GENRES = ['all', 'action', 'adventure', 'animation', 'comedy', 'drama', 'horror', 'mystery', 'romance', 'sci-fi', 'thriller']
